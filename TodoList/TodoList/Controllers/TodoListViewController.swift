@@ -11,14 +11,25 @@ import UIKit
 class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
-    
-    let defaults = UserDefaults.standard
+    var dataFilePath : URL?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item]{
-            itemArray = items
+        dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+        
+        loadItems()
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!){
+            let decoder = PropertyListDecoder()
+            do{
+                itemArray = try decoder.decode([Item].self, from: data)
+            }catch{
+                print("Error Encodinga item array! \(error)")
+            }
+    
         }
     }
     
@@ -39,6 +50,7 @@ class TodoListViewController: UITableViewController {
         item.done = !item.done
         tableView.cellForRow(at: indexPath)?.accessoryType = item.done ? .checkmark : .none
         tableView.deselectRow(at: indexPath, animated: true)
+        saveItems()
     }
     
     @IBAction func addButtonPresed(_ sender: UIBarButtonItem) {
@@ -49,8 +61,8 @@ class TodoListViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             self.itemArray.append(Item(t: textField.text!))
+            self.saveItems()
             self.tableView.reloadData()
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
         }
         
         alert.addTextField { (alertTextField) in
@@ -61,6 +73,16 @@ class TodoListViewController: UITableViewController {
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
         
+    }
+    
+    func saveItems(){
+        let encoder = PropertyListEncoder()
+        do{
+            let data = try encoder.encode(self.itemArray)
+            try data.write(to: dataFilePath!)
+        }catch{
+            print("Error Encodinga item array! \(error)")
+        }
     }
 }
 
