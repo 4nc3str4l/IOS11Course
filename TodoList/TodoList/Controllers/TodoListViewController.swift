@@ -83,6 +83,7 @@ class TodoListViewController: UITableViewController {
     
     
     func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+        
         let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
         
         if let additionalPredicate = predicate{
@@ -96,12 +97,15 @@ class TodoListViewController: UITableViewController {
         }catch{
             print("Error fetching data from context \(error)")
         }
+        
+        tableView.reloadData()
     }
 }
 
 // MARK: - Search bar methods
 
 extension TodoListViewController: UISearchBarDelegate{
+    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
         let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
